@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>선착순왕창세일 - V16 Market</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&display=swap');
+
+        :root { --main-color: #ff0055; --bg-color: #f1f2f6; --gold: #ffd700; --dark: #2f3542; }
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; min-height: 100dvh;
+            margin: 0; padding: 20px 10px 80px 10px;
+            overflow-y: auto; -webkit-tap-highlight-color: transparent;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .container { 
+            background: rgba(255, 255, 255, 0.94); 
+            padding: 30px 20px; border-radius: 30px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            width: 100%; max-width: 450px; 
+            text-align: center; position: relative; z-index: 10; 
+            border: 2px solid rgba(255,255,255,0.6);
+            margin: auto 0;
+        }
+        
+        h1 { 
+            font-family: 'Black Han Sans', sans-serif;
+            color: #ff0055; margin: 0 0 10px 0; font-size: 3rem; 
+            line-height: 1.1; text-shadow: 3px 3px 0px #00f2fe;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
+
+        .sub-title { 
+            font-size: 1.2rem; color: #333; margin-bottom: 20px; font-weight: 900; 
+            background: linear-gradient(90deg, #ff0055, #00f2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* 입력창 & 버튼 */
+        input { 
+            width: 100%; padding: 18px; margin-bottom: 15px; 
+            border: 3px solid #e0e0e0; border-radius: 18px; 
+            font-size: 20px; text-align: center; background: #fff; font-weight: 900; color: #333;
+        }
+        input:focus { border-color: #ff0055; outline: none; }
+
+        .btn-main { 
+            width: 100%; padding: 20px; 
+            background: linear-gradient(45deg, #ff0055, #ff5e62); 
+            color: white; border: none; border-radius: 18px; 
+            font-size: 22px; font-weight: 900; cursor: pointer; 
+            box-shadow: 0 8px 20px rgba(255, 0, 85, 0.4); 
+            transition: transform 0.1s;
+        }
+        .btn-main:active { transform: scale(0.96); }
+        .btn-main:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        /* 상단 고정 로그아웃 배너 */
+        .logout-banner {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: #2f3542; color: white;
+            padding: 15px; border-radius: 25px 25px 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold; font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .logout-btn {
+            background: #e74c3c; color: white; border: none; padding: 5px 12px;
+            border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: 900;
+        }
+
+        /* 버튼 그룹 */
+        .btn-group { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-sub {
+            flex: 1; padding: 12px 5px; border-radius: 15px; border: none;
+            font-size: 14px; font-weight: 900; color: white; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-shop { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .btn-wallet { background: linear-gradient(45deg, #f1c40f, #f39c12); }
+        .btn-gift { background: linear-gradient(45deg, #9b59b6, #8e44ad); } /* 보라색 */
+
+        .hidden { display: none !important; }
+
+        /* 게임 요소 */
+        .timer-display { 
+            font-size: 4rem; font-family: 'Courier New', monospace; 
+            font-weight: 900; color: var(--dark); margin: 30px 0 15px 0; letter-spacing: -4px;
+        }
+        .success-gold { color: var(--gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        .success-silver { color: #2ed573; }
+        .fail { color: #ff4757; }
+        
+        .reward-info { margin-top: 20px; border-top: 3px dashed #eee; padding-top: 15px; }
+        .reward-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .reward-card { 
+            background: #f8f9fa; border-radius: 12px; padding: 10px 5px; 
+            text-align: center; border: 2px solid #eee; height: 90px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .reward-card.highlight { border-color: var(--gold); background: #fffbe6; }
+        .reward-card.lucky { border-color: #00f2fe; background: #e0f7fa; }
+        .r-icon { font-size: 24px; margin-bottom: 5px; }
+        .r-text { font-size: 12px; color: #333; font-weight: 900; }
+        .r-sub { font-size: 11px; color: #777; font-weight: 700; }
+
+        /* 티커 */
+        .ticker-wrap {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.85); color: white; font-size: 15px; 
+            overflow: hidden; height: 50px; line-height: 50px;
+            white-space: nowrap; z-index: 100; backdrop-filter: blur(5px);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .ticker { display: inline-block; animation: marquee 25s linear infinite; padding-left: 100%; }
+        .ticker-item { margin-right: 40px; color: #eee; font-weight: 700; }
+        .ticker-item b { color: #ffeb3b; }
+        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 999;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-box {
+            background: white; width: 90%; max-width: 380px;
+            border-radius: 20px; padding: 25px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            max-height: 80vh; overflow-y: auto;
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 15px; color: #2f3542; }
+        
+        .shop-item {
+            background: #f8f9fa; border: 2px solid #ddd; border-radius: 15px;
+            padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .shop-item:active { transform: scale(0.98); border-color: #3498db; }
+        .shop-price { color: #e74c3c; font-weight: 900; font-size: 1.2rem; }
+        
+        .bank-info {
+            background: #fff3cd; border: 1px solid #ffeeba; color: #856404;
+            padding: 10px; margin-bottom: 15px; border-radius: 8px;
+            font-size: 13px; font-weight: bold; word-break: keep-all; line-height: 1.5;
+        }
+
+        /* 시크릿 쿠폰 스타일 */
+        .coupon-secret-item {
+            background: #2f3542; color: #fff;
+            padding: 15px; margin-bottom: 10px; border-radius: 12px;
+            font-size: 14px; text-align: left; cursor: pointer;
+            border-left: 5px solid #ffd700;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .close-btn {
+            background: #ddd; color: #333; padding: 10px 20px; border-radius: 10px;
+            font-weight: bold; border: none; margin-top: 15px; width: 100%;
+        }
+
+        /* 쿠폰 알림 */
+        .coupon-ticket {
+            padding: 25px; border-radius: 20px; color: white; margin-top: 25px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25); border: 3px dashed rgba(255,255,255,0.8);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .coupon-type-secret { background: linear-gradient(135deg, #636e72 0%, #2d3436 100%); }
+        
+        .near-miss-popup {
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 2rem; font-weight: 900; color: #ff4757;
+            text-shadow: 3px 3px 0 white; z-index: 50; width: 100%; pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .near-miss-popup.show { transform: translate(-50%, -50%) scale(1); }
+        .game-over-text { font-size: 2.5rem; font-weight: 900; color: #2f3542; margin-bottom: 15px; animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+
+        .particle { position: fixed; pointer-events: none; animation: fall linear forwards; z-index: 200; }
+        .gold-dust { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px var(--gold); }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen" class="container">
+        <h1>선착순<br>왕창세일</h1>
+        <div class="sub-title">VIP SECRET MARKET</div>
+        
+        <div class="info-box">
+            <div style="margin-bottom:8px; font-size:16px;">🔥 <b>게임 안내</b></div>
+            • <b>제품 구매자</b>: 무료 3회 (1라운드)<br>
+            • <b>티켓 구매</b>: 50회/100회 충전 (ID기반)<br>
+            • <b>판매하기</b>: 내 횟수를 다른 사람에게 전송!<br>
+            • <b>당첨쿠폰</b>: 시크릿 쿠폰함에 숨겨짐
+        </div>
+        
+        <input type="text" id="userIdInput" placeholder="아이디를 입력하세요" autocomplete="off">
+        <button class="btn-main" onclick="checkUser()">GAME START ▷</button>
+        
+        <div class="btn-group">
+            <button class="btn-sub btn-shop" onclick="openShop()">🎫 충전</button>
+            <button class="btn-sub btn-wallet" onclick="openWallet()">📦 쿠폰</button>
+        </div>
+
+        <p id="loginMsg" style="color:#e74c3c; font-weight:900; font-size:15px; margin-top:20px; min-height:20px;"></p>
+    </div>
+
+    <div id="gameScreen" class="container hidden" style="padding-top:50px;">
+        <div class="logout-banner">
+            <span id="bannerUserStatus">남은 횟수: 0회</span>
+            <button class="logout-btn" onclick="quitGame()">그만하기 (로그아웃)</button>
+        </div>
+
+        <h2 style="margin:0; color:#333; font-size:1.4rem; font-weight:900;">TARGET: 7.777</h2>
+        
+        <div class="timer-display" id="timer">00.000</div>
+        
+        <div id="nearMissPopup" class="near-miss-popup">😱 으악!!<br>아까워요!</div>
+
+        <button id="actionBtn" class="btn-main" ontouchstart="toggleTimer()" onclick="toggleTimer()">START</button>
+        
+        <div class="btn-group" id="inGameButtons">
+            <button class="btn-sub btn-gift" onclick="openTransfer()">🎁 선물/판매</button>
+            <button class="btn-sub btn-wallet" onclick="openWallet()">📦 쿠폰함</button>
+        </div>
+
+        <div style="margin-top:20px; font-size:16px;">
+            <span id="lifeCnt" style="color:#ff0055; font-size:1.5rem; font-weight:900;">❤❤❤</span>
+        </div>
+        
+        <div class="reward-info">
+            <span style="font-size:14px; color:#777; font-weight:900; display:block; margin-bottom:15px;">🏆 오늘의 라인업</span>
+            <div class="reward-grid">
+                <div class="reward-card highlight">
+                    <div class="r-icon">💎</div>
+                    <div class="r-text">10만P</div>
+                    <div class="r-sub">7.777</div>
+                </div>
+                <div class="reward-card">
+                    <div class="r-icon">🎉</div>
+                    <div class="r-text">1만P</div>
+                    <div class="r-sub">7.77x</div>
+                </div>
+                <div class="reward-card lucky">
+                    <div class="r-icon">🍀</div>
+                    <div class="r-text">Lucky 7</div>
+                    <div class="r-sub">티켓/부활</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rewardSection" class="hidden"></div>
+    </div>
+
+    <div id="shopModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-title">🎫 티켓 충전소</div>
+            
+            <div style="margin-bottom:15px;">
+                <label style="font-size:13px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">충전할 아이디 입력</label>
+                <input type="text" id="shopUserId" placeholder="본인 아이디 입력" style="margin-bottom:5px; padding:12px; font-size:16px;">
+            </div>
+
+            <div class="bank-info">
+                🏦 <b>입금 계좌 안내</b><br>
+                국민 843101-04-394545<br>
+                (주)씨드림코어
+            </div>
+            
+            <div class="shop-item" onclick="buyTicket(50, 3000)">
+                <div style="font-size:1.1rem; font-weight:bold;">50회 도전권</div>
+                <div class="shop-price">3,000원</div>
+            </div>
+            <div class="shop-item" onclick="buyTicket(100, 5000)">
+                <div style="font-size:1.1rem; font-weight:bold; color:#ff0055;">100회 도전권</div>
+                <div class="shop-price">5,000원</div>
+            </div>
+            
+            <button class="close-btn" onclick="closeShop()">닫기</button>
+        </div>
+    </div>
+
+    <div id="transferModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-title">🎁 선물 / 판매하기</div>
+            <p style="font-size:13px; color:#666; margin-bottom:15px;">내 횟수를 다른 사람에게 보냅니다.<br>(티켓 보유자만 가능)</p>
+            
+            <div style="text-align:left; margin-bottom:10px;">
+                <label style="font-weight:bold; font-size:13px;">받을 사람 아이디</label>
+                <input type="text" id="transferTargetId" placeholder="예: friend123" style="font-size:16px; padding:12px;">
+            </div>
+            <div style="text-align:left; margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:13px;">보낼 횟수</label>
+                <input type="number" id="transferAmount" placeholder="예: 20" style="font-size:16px; padding:12px; font-weight:bold; width:100%;">
+            </div>
+
+            <button class="btn-main" onclick="processTransfer()" style="font-size:16px; padding:12px; margin-bottom:10px;">보내기</button>
+            <button class="close-btn" onclick="closeTransfer()">취소</button>
+        </div>
+    </div>
+
+    <div id="walletModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-title">📦 내 쿠폰함</div>
+            <p style="font-size:12px; color:#e74c3c; font-weight:bold; margin-bottom:10px;">⚠ 주의: 쿠폰을 오픈하면<br>사용 처리되어 사라집니다.</p>
+            <div id="couponList" style="max-height:250px; overflow-y:auto; padding-right:5px;"></div>
+            <button class="close-btn" onclick="closeWallet()">닫기</button>
+        </div>
+    </div>
+
+    <div class="ticker-wrap"><div class="ticker" id="tickerContent"></div></div>
+
+    <script>
+        // --- 데이터 관리 ---
+        let productUsers = ['user1', 'user2', 'test', 'vip']; 
+        
+        function getTicketDB() { return JSON.parse(localStorage.getItem('wangchang_tickets') || '{}'); }
+        function saveTicketDB(db) { localStorage.setItem('wangchang_tickets', JSON.stringify(db)); }
+        
+        function getMyCoupons() { return JSON.parse(localStorage.getItem('wangchang_coupons') || '[]'); }
+        function saveMyCoupon(title, code) {
+            const list = getMyCoupons();
+            list.unshift({ id: Date.now(), date: new Date().toLocaleDateString(), title: title, code: code });
+            localStorage.setItem('wangchang_coupons', JSON.stringify(list));
+        }
+        function deleteCoupon(id) {
+            let list = getMyCoupons();
+            list = list.filter(c => c.id !== id);
+            localStorage.setItem('wangchang_coupons', JSON.stringify(list));
+        }
+
+        // --- 전역 변수 ---
+        let currentUser = "";
+        let attemptsLeft = 3;
+        let isTicketUser = false;
+        let startTime = 0;
+        let animationFrameId;
+        let isRunning = false;
+        const TARGET = 7.777;
+
+        // --- 초기화 ---
+        const tickerContent = document.getElementById('tickerContent');
+        const dummyUsers = ["alex**", "kim**", "lee**", "park**"];
+        function initTicker() { for(let i=0; i<4; i++) addTickerItem(getRandomDummy()); }
+        function getRandomDummy() {
+            const user = dummyUsers[Math.floor(Math.random() * dummyUsers.length)];
+            const t = (7 + Math.random()).toFixed(3);
+            return `<span class="ticker-item">🔥 <b>${user}</b>님 <b>${t}초</b> 기록!</span>`;
+        }
+        function addTickerItem(html) { tickerContent.innerHTML += html; }
+        initTicker();
+
+        // --- 로그인 ---
+        function checkUser() {
+            const input = document.getElementById('userIdInput');
+            const inputId = input.value.trim();
+            if (!inputId) return;
+
+            const ticketDB = getTicketDB();
+
+            if (ticketDB[inputId] !== undefined) {
+                if(ticketDB[inputId] > 0) {
+                    currentUser = inputId;
+                    attemptsLeft = ticketDB[inputId];
+                    isTicketUser = true;
+                    enterGame();
+                } else {
+                    alert("티켓 횟수를 모두 소진했습니다. 충전해주세요.");
+                }
+            } 
+            else if (productUsers.includes(inputId)) {
+                currentUser = inputId;
+                attemptsLeft = 3;
+                isTicketUser = false;
+                enterGame();
+            } 
+            else {
+                shakeInput();
+                document.getElementById('loginMsg').innerText = "유효하지 않은 ID입니다.";
+            }
+        }
+
+        function enterGame() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            // VIP 유저는 선물하기 버튼 숨김
+            if(!isTicketUser) {
+                document.querySelector('.btn-gift').style.display = 'none';
+            } else {
+                document.querySelector('.btn-gift').style.display = 'block';
+            }
+
+            updateLifeUI();
+            resetRoundUI();
+        }
+
+        function quitGame() {
+            if(isTicketUser) {
+                const db = getTicketDB();
+                db[currentUser] = attemptsLeft;
+                saveTicketDB(db);
+                alert(`💾 ${attemptsLeft}회 저장 완료!\n로그아웃 되었습니다.`);
+            } else {
+                alert("로그아웃 되었습니다.");
+            }
+            location.reload();
+        }
+
+        // --- 선물/판매 시스템 ---
+        function openTransfer() { document.getElementById('transferModal').classList.remove('hidden'); }
+        function closeTransfer() { document.getElementById('transferModal').classList.add('hidden'); }
+
+        function processTransfer() {
+            if(!isTicketUser) { alert("무료 체험 회원은 선물할 수 없습니다."); return; }
+
+            const targetId = document.getElementById('transferTargetId').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value);
+
+            if(!targetId) { alert("받을 사람 아이디를 입력하세요."); return; }
+            if(!amount || amount <= 0) { alert("보낼 횟수를 정확히 입력하세요."); return; }
+            if(amount > attemptsLeft) { alert(`보유 횟수가 부족합니다.\n(현재 ${attemptsLeft}회)`); return; }
+            if(targetId === currentUser) { alert("본인에게는 보낼 수 없습니다."); return; }
+
+            if(confirm(`[ ${targetId} ]님에게 ${amount}회를 전송하시겠습니까?\n\n내 잔여 횟수에서 즉시 차감됩니다.`)) {
+                const db = getTicketDB();
+                
+                // 내 횟수 차감
+                attemptsLeft -= amount;
+                db[currentUser] = attemptsLeft;
+
+                // 상대방 횟수 증가 (없으면 생성)
+                const targetCurrent = db[targetId] || 0;
+                db[targetId] = targetCurrent + amount;
+
+                saveTicketDB(db);
+                updateLifeUI(); // UI 갱신
+
+                alert(`✅ 전송 완료!\n\n${targetId}님에게 ${amount}회가 선물되었습니다.\n남은 횟수: ${attemptsLeft}회`);
+                closeTransfer();
+
+                if(attemptsLeft <= 0) {
+                    alert("모든 횟수를 전송하여 게임을 종료합니다.");
+                    quitGame();
+                }
+            }
+        }
+
+        // --- 상점 시스템 ---
+        function openShop() { 
+            document.getElementById('shopModal').classList.remove('hidden'); 
+            const currentInput = document.getElementById('userIdInput').value;
+            if(currentInput) document.getElementById('shopUserId').value = currentInput;
+        }
+        function closeShop() { document.getElementById('shopModal').classList.add('hidden'); }
+        
+        function buyTicket(rounds, price) {
+            const targetId = document.getElementById('shopUserId').value.trim();
+            if(!targetId) { alert("충전할 아이디를 입력해주세요!"); return; }
+
+            if(confirm(`[ ${targetId} ]님에게 ${rounds}회를 충전하시겠습니까?\n\n입금액: ${price}원\n입금자명과 아이디가 일치해야 합니다.`)) {
+                const db = getTicketDB();
+                const currentCount = db[targetId] || 0;
+                db[targetId] = currentCount + rounds;
+                saveTicketDB(db);
+                
+                alert(`✅ 충전 신청 완료!\n(테스트 모드: 즉시 충전됨)\n\nID: ${targetId}\n잔여 횟수: ${db[targetId]}회`);
+                document.getElementById('userIdInput').value = targetId;
+                closeShop();
+            }
+        }
+
+        // --- 쿠폰함 ---
+        function openWallet() { 
+            document.getElementById('walletModal').classList.remove('hidden'); 
+            const list = getMyCoupons();
+            const listContainer = document.getElementById('couponList');
+            listContainer.innerHTML = "";
+            if(list.length === 0) {
+                listContainer.innerHTML = "<div style='padding:20px; color:#999;'>보유한 쿠폰이 없습니다.</div>";
+            } else {
+                list.forEach(c => {
+                    listContainer.innerHTML += `
+                    <div class="coupon-secret-item" onclick="revealCoupon(${c.id}, '${c.code}')">
+                        <div>
+                            <div style="font-weight:900; font-size:15px; color:#ffd700;">${c.title}</div>
+                            <div style="font-size:11px; color:#ccc;">${c.date} 획득</div>
+                        </div>
+                        <div class="lock-icon">🔒 확인하기</div>
+                    </div>`;
+                });
+            }
+        }
+        function closeWallet() { document.getElementById('walletModal').classList.add('hidden'); }
+
+        function revealCoupon(id, code) {
+            if(confirm("⚠ 경고\n\n지금 확인하시겠습니까?\n\n오픈 즉시 '사용 완료' 처리되어\n목록에서 사라집니다.")) {
+                alert(`🎉 쿠폰 코드 확인\n\n[ ${code} ]\n\n캡처하여 보관하세요.`);
+                deleteCoupon(id);
+                openWallet();
+            }
+        }
+
+        // --- 게임 로직 ---
+        function toggleTimer() {
+            event && event.preventDefault();
+            if (attemptsLeft <= 0) return;
+            const btn = document.getElementById('actionBtn');
+            const display = document.getElementById('timer');
+            document.getElementById('nearMissPopup').classList.remove('show');
+
+            if (!isRunning) {
+                isRunning = true;
+                btn.innerText = "STOP!";
+                btn.style.background = "#ff0055";
+                display.classList.remove('success-gold', 'success-silver', 'fail');
+                startTime = performance.now();
+                updateTimerLoop();
+            } else {
+                isRunning = false;
+                cancelAnimationFrame(animationFrameId);
+                const now = performance.now();
+                const finalTime = (now - startTime) / 1000;
+                display.innerText = finalTime.toFixed(3);
+                checkResult(finalTime);
+            }
+        }
+
+        function updateTimerLoop() {
+            const now = performance.now();
+            const elapsed = (now - startTime) / 1000;
+            document.getElementById('timer').innerText = elapsed.toFixed(3);
+            if (isRunning) animationFrameId = requestAnimationFrame(updateTimerLoop);
+        }
+
+        function checkResult(timeVal) {
+            const strTime = timeVal.toFixed(3);
+            const strTarget = TARGET.toFixed(3);
+            
+            attemptsLeft--;
+            if(isTicketUser) {
+                const db = getTicketDB();
+                if(db[currentUser]) {
+                    db[currentUser] = attemptsLeft;
+                    saveTicketDB(db);
+                }
+            }
+            updateLifeUI();
+
+            if (Math.abs(timeVal - TARGET) < 0.05 && strTime !== strTarget) {
+                 document.getElementById('nearMissPopup').classList.add('show');
+            }
+
+            if (strTime === strTarget) {
+                successGame("success-gold", "🎉 7.777 잭팟! 10만P", "10만 R포인트");
+                createGoldDust();
+                return;
+            } 
+            if (strTime.startsWith("7.77")) {
+                successGame("success-silver", "👏 2자리 성공! 1만P", "1만 R포인트");
+                createConfetti();
+                return;
+            }
+
+            const countSevens = (strTime.match(/7/g) || []).length;
+            if (countSevens >= 3) {
+                 const rand = Math.random();
+                 if(rand < 0.3) {
+                     const ticketType = Math.random() < 0.5 ? 50 : 100;
+                     if(isTicketUser) {
+                         const db = getTicketDB();
+                         db[currentUser] = (db[currentUser] || 0) + ticketType;
+                         attemptsLeft += ticketType;
+                         saveTicketDB(db);
+                         alert(`🍀 Lucky 7 대박 당첨!\n\n현재 아이디에 [ ${ticketType}회 ]가 즉시 충전되었습니다.`);
+                         updateLifeUI();
+                     } else {
+                         const code = generateCode();
+                         saveMyCoupon(`${ticketType}회 도전권`, code);
+                         alert(`🍀 Lucky 7 대박 당첨!\n\n[ ${ticketType}회 도전권 ]\n쿠폰함에 코드가 저장되었습니다.`);
+                     }
+                 } else {
+                     alert("🍀 Lucky 7!\n보너스 기회 +3회를 드립니다.");
+                     attemptsLeft += 3;
+                     updateLifeUI();
+                 }
+                 createConfetti();
+                 return;
+            }
+
+            document.getElementById('timer').classList.add('fail');
+            if (attemptsLeft > 0) {
+                document.getElementById('gameMsg').innerText = `기록: ${strTime}초 (꽝!) 다시 도전하세요.`;
+                document.getElementById('actionBtn').innerText = "RETRY";
+                document.getElementById('actionBtn').style.background = "#2f3542";
+            } else {
+                gameOver();
+            }
+        }
+
+        function successGame(css, txt, prizeName) {
+            document.getElementById('timer').classList.add(css);
+            document.getElementById('gameMsg').innerHTML = txt;
+            document.getElementById('actionBtn').disabled = true;
+            const code = generateCode();
+            saveMyCoupon(prizeName, code);
+            const section = document.getElementById('rewardSection');
+            section.classList.remove('hidden');
+            section.innerHTML = `
+               <div class="coupon-ticket coupon-type-secret">
+                   <div style="font-size:1.5rem; font-weight:900;">당첨을 축하합니다!</div>
+                   <div style="font-size:1.2rem; margin-top:5px; font-weight:bold; color:#ffd700;">${prizeName}</div>
+                   <div style="font-size:0.9rem; margin-top:10px;">비밀 코드가 <span style="color:#ffd700;">[내 쿠폰함]</span>에<br>지급되었습니다.</div>
+               </div>
+               <button onclick="location.reload()" style="margin-top:20px; background:#333; color:white; padding:15px; width:100%; border:none; border-radius:10px; font-weight:bold;">처음으로</button>
+            `;
+            if(isTicketUser) {
+                const db = getTicketDB();
+                delete db[currentUser];
+                saveTicketDB(db);
+            }
+        }
+
+        function gameOver() {
+            const msg = document.getElementById('gameMsg');
+            if(isTicketUser) {
+                msg.innerHTML = `<div class="game-over-text">GAME OVER</div>티켓을 모두 소진했습니다.`;
+                const db = getTicketDB();
+                delete db[currentUser];
+                saveTicketDB(db);
+                finishGameUI(false);
+            } else {
+                msg.innerHTML = `<div class="game-over-text">GAME OVER</div>위로금이 지급됩니다.`;
+                setTimeout(giveConsolationPrize, 800);
+                finishGameUI(true);
+            }
+        }
+
+        function finishGameUI(hasCoupon) {
+            const btn = document.getElementById('actionBtn');
+            btn.innerText = "GAME OVER";
+            btn.disabled = true;
+            btn.style.background = "#ccc";
+            document.querySelector('.logout-banner').classList.add('hidden');
+            if(!hasCoupon) {
+                 setTimeout(() => {
+                    document.getElementById('rewardSection').classList.remove('hidden');
+                    document.getElementById('rewardSection').innerHTML = `
+                        <button onclick="location.reload()" style="margin-top:20px; background:#333; color:white; padding:15px; width:100%; border:none; border-radius:10px;">처음으로</button>
+                    `;
+                }, 1000);
+            }
+        }
+
+        function giveConsolationPrize() {
+            const isShipping = Math.random() < 0.5;
+            const code = generateCode();
+            const section = document.getElementById('rewardSection');
+            section.classList.remove('hidden');
+            let title="";
+            if(isShipping) { title="배송비 무료 쿠폰"; saveMyCoupon(title, code); } 
+            else { title="5% 할인 쿠폰"; saveMyCoupon(title, code); }
+            section.innerHTML = `
+                <div class="coupon-ticket coupon-type-secret">
+                   <div style="font-size:1.5rem; font-weight:900;">위로금 지급 완료</div>
+                   <div style="font-size:1.2rem; margin-top:5px; font-weight:bold; color:#ffd700;">${title}</div>
+                   <div style="font-size:0.9rem; margin-top:10px;">비밀 코드가 <span style="color:#ffd700;">[내 쿠폰함]</span>에<br>지급되었습니다.</div>
+               </div>
+                <button onclick="location.reload()" style="margin-top:20px; background:#333; color:white; padding:15px; width:100%; border:none; border-radius:10px;">처음으로</button>
+            `;
+        }
+
+        function updateLifeUI() {
+            const el = document.getElementById('lifeCnt');
+            const banner = document.getElementById('bannerUserStatus');
+            if(isTicketUser) {
+                const txt = `${attemptsLeft}회 남음`;
+                el.innerText = txt; el.style.fontSize="1.5rem"; el.style.letterSpacing="0px";
+                banner.innerText = `${currentUser} | ${txt}`;
+            } else {
+                el.innerText = "❤".repeat(attemptsLeft) + "♡".repeat(3 - attemptsLeft);
+                banner.innerText = `${currentUser} | 무료체험`;
+            }
+        }
+
+        function resetRoundUI() {
+            document.getElementById('timer').innerText = "00.000";
+            document.getElementById('gameMsg').innerText = "0.001초의 승부! 정확히 멈추세요.";
+            document.getElementById('rewardSection').classList.add('hidden');
+            document.getElementById('rewardSection').innerHTML = "";
+            isRunning = false; 
+            document.getElementById('actionBtn').disabled = false;
+            document.getElementById('actionBtn').innerText = "START";
+            document.getElementById('actionBtn').style.background = "#ff0055";
+        }
+
+        function shakeInput() {
+            const c = document.getElementById('loginScreen');
+            c.style.transform = "translateX(10px)";
+            setTimeout(()=>c.style.transform="translateX(-10px)",50);
+            setTimeout(()=>c.style.transform="translateX(0)",100);
+        }
+
+        function generateCode() {
+            let c = ""; const s = "A1B2C3D4E5F6G7H8J9K0";
+            for(let i=0; i<4; i++) c += s.charAt(Math.floor(Math.random()*s.length));
+            return c;
+        }
+
+        function createGoldDust() {
+            for(let i=0;i<60;i++){
+                const d=document.createElement('div'); d.className='particle gold-dust';
+                d.style.left=Math.random()*100+'vw'; d.style.animationDuration=(Math.random()*3+2)+'s';
+                document.body.appendChild(d);
+            }
+        }
+        function createConfetti() {
+             const colors=['#e74c3c','#3498db','#f1c40f'];
+             for(let i=0; i<40; i++){
+                 const p=document.createElement('div'); p.className='particle';
+                 p.style.width='8px'; p.style.height='8px'; p.style.backgroundColor=colors[Math.floor(Math.random()*3)];
+                 p.style.left=Math.random()*100+'vw'; p.style.top='-10px'; p.style.animationDuration=(Math.random()*2+1)+'s';
+                 document.body.appendChild(p);
+             }
+        }
+    </script>
+</body>
+</html>
